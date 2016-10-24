@@ -1,2 +1,2 @@
 # EEC284CarModelRecog
-Car Model Recognition App for EEC284
+Lane and Vehicle Detection App for EEC284 in Fall 16
