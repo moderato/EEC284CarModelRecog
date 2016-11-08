@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.0"
+    buildToolsVersion "24.0.3"
     defaultConfig {
         applicationId "com.example.moderato.cvcv"
         minSdkVersion 21
@@ -16,6 +16,19 @@ android {
             }
         }
     }
+    sourceSets.main {
+        jni.srcDirs = [] //disable automatic ndk-build call
+    }
+    task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
+        commandLine "/Library/android-sdk-macosx/ndk-bundle/ndk-build",
+                'NDK_PROJECT_PATH=build/intermediates/ndk',
+                'NDK_LIBS_OUT=src/main/jniLibs',
+                'APP_BUILD_SCRIPT=src/main/jni/Android.mk',
+                'NDK_APPLICATION_MK=src/main/jni/Application.mk'
+    }
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn ndkBuild
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -27,7 +40,7 @@ android {
             path "CMakeLists.txt"
         }
     }
-    sourceSets { main { jni.srcDirs = ['src/main/jni', 'src/main/jniLibs/', 'src/main/jni/'] } }
+//    sourceSets { main { jni.srcDirs = ['src/main/jni', 'src/main/jniLibs/', 'src/main/jni/'] } }
 }
 
 dependencies {

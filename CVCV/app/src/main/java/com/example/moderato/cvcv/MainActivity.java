@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     private static final String TAG = "MainActivity";
     JavaCameraView javaCameraView;
-    Mat mRgba;
+    Mat mRgba, mGray;
     BaseLoaderCallback mLoaderCallBack = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("opencv_java3");
+        System.loadLibrary("OpencvNativeClass");
     }
 
     @Override
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
+        mGray = new Mat(height, width, CvType.CV_8UC1);
     }
 
     @Override
@@ -104,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        return mRgba;
+        OpencvNativeClass.convertGray(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr());
+        return mGray;
     }
 }
