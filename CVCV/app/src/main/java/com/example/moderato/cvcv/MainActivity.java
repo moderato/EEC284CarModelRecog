@@ -3,7 +3,6 @@ package com.example.moderato.cvcv;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Surface;
 import android.view.SurfaceView;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -90,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        OpencvNativeClass.convertGray(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr());
+        OpencvNativeClass.cannyThreshold(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), 0 ,0);
         return mGray;
     }
 }

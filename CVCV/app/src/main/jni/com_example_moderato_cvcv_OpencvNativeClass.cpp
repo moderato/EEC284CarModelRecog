@@ -1,22 +1,26 @@
 #include <com_example_moderato_cvcv_OpencvNativeClass.h>
 
-JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_convertGray
-  (JNIEnv *, jclass, jlong addrRgba, jlong addrGray) {
-    Mat& mRgb = *(Mat*)addrRgba;
-    Mat& mGray = *(Mat*)addrGray;
+int cannyEdge(Mat img, Mat& detected, int th1, int th2) {
+  cvtColor(img, detected, CV_RGB2GRAY);
+  blur(detected, detected, Size(3,3));
+  Canny(detected, detected, th1, th2, 3);
+  if (detected.rows == img.rows && detected.cols==img.cols) {
+    return 1;
+  }
+  return 0;
+}
+
+JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThreshold
+  (JNIEnv *, jclass, jlong addrSrc, jlong addrDst, jint thresh1, jint thresh2){
+    Mat& src = *(Mat*)addrSrc;
+    Mat& dst = *(Mat*)addrDst;
+    int th1 = (int) thresh1;
+    int th2 = (int) thresh2;
 
     int conv;
     jint retVal;
-    conv = toGray(mRgb, mGray);
+    conv = cannyEdge(src, dst, th1, th2);
 
     retVal = (jint) conv;
     return retVal;
   };
-
-  int toGray(Mat img, Mat& gray) {
-    cvtColor(img, gray, CV_RGB2GRAY);
-    if (gray.rows == img.rows && gray.cols==img.cols) {
-        return 1;
-    }
-    return 0;
-  }
