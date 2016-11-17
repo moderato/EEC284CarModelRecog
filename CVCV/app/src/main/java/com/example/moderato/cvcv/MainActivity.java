@@ -21,6 +21,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private Mat mRgba, mGray;
     private VerticalSeekBar seekBar;
     private int highThreshold = 0;
+    private static final String XMLDIR = "app/src/main/jni/data.xml";
+
     BaseLoaderCallback mLoaderCallBack = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -105,12 +107,15 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     public void onCameraViewStopped() {
         mRgba.release();
+        mGray.release();
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
-        OpencvNativeClass.cannyThreshold(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), 0, highThreshold);
-        return mGray;
+//        OpencvNativeClass.cannyThreshold(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), 0, highThreshold);
+//        return mGray;
+        OpencvNativeClass.detectObject(mRgba.getNativeObjAddr(), XMLDIR);
+        return mRgba;
     }
 }

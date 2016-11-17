@@ -24,3 +24,11 @@ JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThr
     retVal = (jint) conv;
     return retVal;
   };
+
+JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectObject
+  (JNIEnv *, jclass, jlong addrSrc, jstring xmlDir){
+    Mat& src = *(Mat*)addrSrc;
+
+
+    return 1;
+  }

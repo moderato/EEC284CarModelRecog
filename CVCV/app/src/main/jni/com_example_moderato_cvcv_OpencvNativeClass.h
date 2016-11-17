@@ -23,6 +23,17 @@ int cannyEdge(Mat img, Mat& detected);
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThreshold
   (JNIEnv *, jclass, jlong, jlong, jint, jint);
 
+
+/*
+ * Class:     com_example_moderato_cvcv_OpencvNativeClass
+ * Method:    detectObject
+ * Signature: (JJII)I
+ */
+JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectObject
+  (JNIEnv *, jclass, jlong, jstring);
+
+
+
 #ifdef __cplusplus
 }
 #endif
