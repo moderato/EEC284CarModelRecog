@@ -28,6 +28,9 @@ JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThr
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectObject
   (JNIEnv *, jclass, jlong addrSrc, jstring xmlDir){
     Mat& src = *(Mat*)addrSrc;
+    string d = (string) xmlDir;
+    const 
+
 
 
     return 1;

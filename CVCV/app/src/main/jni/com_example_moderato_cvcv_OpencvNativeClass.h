@@ -2,6 +2,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdio.h>
+#include <string>
+#include <cstdio>
+#include <cstdlib>
 /* Header for class com_example_moderato_cvcv_OpencvNativeClass */
 
 using namespace std;
@@ -23,7 +26,6 @@ int cannyEdge(Mat img, Mat& detected);
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThreshold
   (JNIEnv *, jclass, jlong, jlong, jint, jint);
 
-
 /*
  * Class:     com_example_moderato_cvcv_OpencvNativeClass
  * Method:    detectObject
@@ -31,8 +33,6 @@ JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThr
  */
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectObject
   (JNIEnv *, jclass, jlong, jstring);
-
-
 
 #ifdef __cplusplus
 }
