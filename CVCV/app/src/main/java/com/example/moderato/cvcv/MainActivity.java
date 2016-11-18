@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private Mat mRgba, mGray;
     private VerticalSeekBar seekBar;
     private int highThreshold = 0;
-    private static final String XMLDIR = "app/src/main/jni/data.xml";
+    private String XMLDIR;
 
     BaseLoaderCallback mLoaderCallBack = new BaseLoaderCallback(this) {
         @Override
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        CvHelper.copyClassifier(getApplicationContext());
+        XMLDIR = CvHelper.copyClassifier(getApplicationContext());
 
         javaCameraView = (JavaCameraView) findViewById(R.id.java_camera_view);
         javaCameraView.setVisibility(SurfaceView.VISIBLE);
