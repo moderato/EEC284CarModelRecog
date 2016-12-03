@@ -1,13 +1,13 @@
 #include <com_example_moderato_cvcv_OpencvNativeClass.h>
 
 int cannyEdge(Mat img, Mat& detected, int th1, int th2) {
-  cvtColor(img, detected, CV_RGB2GRAY);
-  blur(detected, detected, Size(3,3));
-  Canny(detected, detected, th1, th2, 3);
-  if (detected.rows == img.rows && detected.cols==img.cols) {
-    return 1;
-  }
-  return 0;
+    cvtColor(img, detected, CV_RGB2GRAY);
+    blur(detected, detected, Size(3, 3));
+    Canny(detected, detected, th1, th2, 3);
+    if (detected.rows == img.rows && detected.cols == img.cols) {
+        return 1;
+    }
+    return 0;
 }
 
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThreshold
@@ -27,50 +27,24 @@ JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThr
 
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectObject
   (JNIEnv *env, jclass, jlong addrSrc, jstring xmlDir){
-    Mat& src = *(Mat*)addrSrc;
+    Mat& frame = *(Mat*)addrSrc;
     const char *dir = env->GetStringUTFChars(xmlDir, 0);
-    CvHaarClassifierCascade *pHaarCascade = NULL;
-    pHaarCascade = (CvHaarClassifierCascade*)cvLoad(dir);
+    CascadeClassifier face_cascade;
+    if( !face_cascade.load(dir) ){ printf("--(!)Error loading\n"); return -1; };
 
-    IplImage* pSrcImage;
-    *pSrcImage = IplImage(src);
-    IplImage *pGrayImage = cvCreateImage(cvGetSize(pSrcImage), IPL_DEPTH_8U, 1);
-    cvCvtColor(pSrcImage, pGrayImage, CV_BGR2GRAY);
+    vector<Rect> faces;
+    Mat frame_gray;
 
-    if (pHaarCascade != NULL)
-      {
-        CvScalar FaceCirclecolors[] =
-        {
-            CvScalar(0, 0, 255),
-            CvScalar(0, 128, 255),
-            CvScalar(0, 255, 255),
-            CvScalar(0, 255, 0),
-            CvScalar(255, 128, 0),
-            CvScalar(255, 255, 0),
-            CvScalar(255, 0, 0),
-            CvScalar(255, 0, 255)
-        };
+    cvtColor(frame, frame_gray, CV_BGR2GRAY);
+    equalizeHist(frame_gray, frame_gray);
 
-        CvMemStorage *pcvMStorage = cvCreateMemStorage(0);
-        cvClearMemStorage(pcvMStorage);
+    face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, Size(30, 30), Size(70, 70));
 
-        CvSeq *pcvSeqFaces = cvHaarDetectObjects(pGrayImage, pHaarCascade, pcvMStorage);
-
-        for(int i = 0; i <pcvSeqFaces->total; i++)
-        {
-            CvRect* r = (CvRect*)cvGetSeqElem(pcvSeqFaces, i);
-            CvPoint center;
-            int radius;
-            center.x = cvRound((r->x + r->width * 0.5));
-            center.y = cvRound((r->y + r->height * 0.5));
-            radius = cvRound((r->width + r->height) * 0.25);
-            cvCircle(pSrcImage, center, radius, FaceCirclecolors[i % 8], 2);
-        }
-        cvReleaseMemStorage(&pcvMStorage);
+    for(size_t i = 0; i < faces.size(); i++)
+    {
+        Point pt1(faces[i].x, faces[i].y);
+        Point pt2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+        rectangle(frame, pt1, pt2, Scalar(255, 0, 255), 4, 8, 0);
     }
-
-    src = cvarrToMat(pSrcImage);
-    cvReleaseImage(&pSrcImage);
-    cvReleaseImage(&pGrayImage);
     return 1;
   }

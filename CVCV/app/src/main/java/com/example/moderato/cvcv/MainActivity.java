@@ -1,5 +1,6 @@
 package com.example.moderato.cvcv;
 
+import android.hardware.Camera;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,6 +15,11 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
     private static final String TAG = "MainActivity";
@@ -22,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private VerticalSeekBar seekBar;
     private int highThreshold = 0;
     private String XMLDIR;
+    private Camera.Parameters params;
 
     BaseLoaderCallback mLoaderCallBack = new BaseLoaderCallback(this) {
         @Override
@@ -42,10 +49,12 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         XMLDIR = CvHelper.copyClassifier(getApplicationContext());
+//        params = Camera.open().getParameters();
 
         javaCameraView = (JavaCameraView) findViewById(R.id.java_camera_view);
         javaCameraView.setVisibility(SurfaceView.VISIBLE);
         javaCameraView.setCvCameraViewListener(this);
+        javaCameraView.setMaxFrameSize(640, 480);
 
         seekBar = (VerticalSeekBar) findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -113,10 +122,23 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+        long startTime = System.currentTimeMillis();
         mRgba = inputFrame.rgba();
-//        OpencvNativeClass.cannyThreshold(mRgba.getNativeObjAddr(), mGray.getNativeObjAddr(), 0, highThreshold);
-//        return mGray;
-        OpencvNativeClass.detectObject(mRgba.getNativeObjAddr(), XMLDIR);
-        return mRgba;
+        final long grayAddr = mGray.getNativeObjAddr();
+//        Log.d(TAG, "Preview frame rate is " + params.getPreviewFrameRate());
+//        Log.d(TAG, "Supported frame rate is " + params.getSupportedPreviewFrameRates());
+
+        Observable.just(mRgba)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Mat>() {
+                               @Override
+                               public void call(Mat mat) {
+                                   OpencvNativeClass.cannyThreshold(mat.getNativeObjAddr(), grayAddr, 0, highThreshold);
+                               }
+                           });
+        return mGray;
+//        OpencvNativeClass.detectObject(mRgba.getNativeObjAddr(), XMLDIR);
+//        return mRgba;
     }
 }
