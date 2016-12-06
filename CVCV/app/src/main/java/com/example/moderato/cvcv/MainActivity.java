@@ -15,15 +15,14 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -37,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private String XMLDIR;
     private CascadeClassifier mClassifier;
     private MatOfRect mRects;
-    private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
+    private static final Scalar CAR_RECT_COLOR = new Scalar(0, 255, 0, 255);
     private int count = 0;
 
     BaseLoaderCallback mLoaderCallBack = new BaseLoaderCallback(this) {
@@ -73,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         javaCameraView = (JavaCameraView) findViewById(R.id.java_camera_view);
         javaCameraView.setVisibility(SurfaceView.VISIBLE);
         javaCameraView.setCvCameraViewListener(this);
-        javaCameraView.setMaxFrameSize(640, 480);
+        javaCameraView.setMaxFrameSize(400, 300); // 352*288
 
         seekBar = (VerticalSeekBar) findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -145,32 +144,31 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         final Long addrObj = Long.valueOf(mRgba.getNativeObjAddr());
 
-        Observable.just(addrObj)
-            .flatMap(new Func1<Long, Observable<?>>() {
-                @Override
-                public Observable<Boolean> call(Long addr) {
-                    long startTime = System.currentTimeMillis();
-                    OpencvNativeClass.detectObject(addr, mRects.getNativeObjAddr(), XMLDIR);
-                    if(!mRects.empty()) {
-                        Log.d(TAG, "YES!!!!");
-                    } else {
-                        Log.d(TAG, "SHIT!!!!");
+        if(count % 5 == 0) {
+            Observable.just(addrObj)
+                .flatMap(new Func1<Long, Observable<?>>() {
+                    @Override
+                    public Observable<Boolean> call(Long addr) {
+                        long startTime = System.currentTimeMillis();
+                        OpencvNativeClass.detectObject(addr, mRects.getNativeObjAddr(), XMLDIR);
+                        Log.d(TAG, "Running time of the algorithm on this frame is " + (System.currentTimeMillis() - startTime));
+                        return Observable.just(true);
                     }
-                    Log.d(TAG, "Running time of the algorithm on this frame is " + (System.currentTimeMillis() - startTime));
-                    return Observable.just(true);
-                }
-            })
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe();
-
+                })
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+        }
         if(!mRects.empty()) {
             Rect[] carsArray = mRects.toArray();
             for (Rect car : carsArray) {
-                Imgproc.rectangle(mRgba, car.tl(), car.br(), FACE_RECT_COLOR, 3);
+                Point pt = car.tl();
+                if(pt.y >= 72 && pt.y <= 216){
+                    Imgproc.rectangle(mRgba, car.tl(), car.br(), CAR_RECT_COLOR, 3);
+                }
             }
         }
-
+        count++;
         return mRgba;
     }
 }

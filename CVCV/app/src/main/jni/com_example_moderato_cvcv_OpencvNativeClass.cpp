@@ -49,14 +49,14 @@ JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectOb
     cvtColor(frame, frame_gray, CV_BGR2GRAY);
     equalizeHist(frame_gray, frame_gray);
 
-    face_cascade.detectMultiScale(frame_gray, objs, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, Size(30, 30), Size(150, 150));
+    face_cascade.detectMultiScale(frame_gray, objs, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, Size(20, 20), Size(130, 130));
 
-    for(size_t i = 0; i < objs.size(); i++) {
-//        objs[i].y += 120;
-        Point pt1(objs[i].x, objs[i].y);
-        Point pt2(objs[i].x + objs[i].width, objs[i].y + objs[i].height);
-        rectangle(frame, pt1, pt2, Scalar(255, 0, 255), 4, 8, 0);
-    }
+//    for(size_t i = 0; i < objs.size(); i++) {
+////        objs[i].y += 120;
+//        Point pt1(objs[i].x, objs[i].y);
+//        Point pt2(objs[i].x + objs[i].width, objs[i].y + objs[i].height);
+//        rectangle(frame, pt1, pt2, Scalar(0, 255, 0), 4, 8, 0);
+//    }
 
     vector_Rect_to_Mat(objs, cars);
 
