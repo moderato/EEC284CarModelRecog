@@ -10,8 +10,13 @@ int cannyEdge(Mat img, Mat& detected, int th1, int th2) {
     return 0;
 }
 
+void vector_Rect_to_Mat(vector<Rect>& v_rect, Mat& mat)
+{
+    mat = Mat(v_rect, true);
+}
+
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThreshold
-  (JNIEnv *, jclass, jlong addrSrc, jlong addrDst, jint thresh1, jint thresh2){
+  (JNIEnv *, jclass, jlong addrSrc, jlong addrDst, jint thresh1, jint thresh2) {
     Mat& src = *(Mat*)addrSrc;
     Mat& dst = *(Mat*)addrDst;
     int th1 = (int) thresh1;
@@ -26,25 +31,34 @@ JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThr
   };
 
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectObject
-  (JNIEnv *env, jclass, jlong addrSrc, jstring xmlDir){
-    Mat& frame = *(Mat*)addrSrc;
+  (JNIEnv *env, jclass, jlong addrSrc, jlong rectAddr, jstring xmlDir) {
+
+    Mat& frame = *((Mat*)addrSrc);
+    Mat& cars = *((Mat*)rectAddr);
+    vector<Rect> objs;
+    Rect myROI(0, 120, 640, 240);
+    Mat cropped = frame(myROI).clone();
+
     const char *dir = env->GetStringUTFChars(xmlDir, 0);
     CascadeClassifier face_cascade;
-    if( !face_cascade.load(dir) ){ printf("--(!)Error loading\n"); return -1; };
+    if( !face_cascade.load(dir) ){ cout << "--(!)Error loading" << endl; return -1; };
 
-    vector<Rect> faces;
     Mat frame_gray;
 
-    cvtColor(frame, frame_gray, CV_BGR2GRAY);
+    cvtColor(cropped, frame_gray, CV_BGR2GRAY);
     equalizeHist(frame_gray, frame_gray);
 
-    face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, Size(30, 30), Size(70, 70));
+    face_cascade.detectMultiScale(frame_gray, objs, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, Size(30, 30), Size(150, 150));
 
-    for(size_t i = 0; i < faces.size(); i++)
-    {
-        Point pt1(faces[i].x, faces[i].y);
-        Point pt2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+    for(size_t i = 0; i < objs.size(); i++) {
+        objs[i].y += 120;
+        Point pt1(objs[i].x, objs[i].y);
+        Point pt2(objs[i].x + objs[i].width, objs[i].y + objs[i].height);
         rectangle(frame, pt1, pt2, Scalar(255, 0, 255), 4, 8, 0);
     }
+
+    vector_Rect_to_Mat(objs, cars);
+
+    frame_gray.release();
     return 1;
   }

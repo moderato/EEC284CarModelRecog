@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 int cannyEdge(Mat img, Mat& detected);
+void vector_Rect_to_Mat(vector<Rect>& v_rect, Mat& mat);
 
 /*
  * Class:     com_example_moderato_cvcv_OpencvNativeClass
@@ -34,7 +35,7 @@ JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_cannyThr
  * Signature: (JJII)I
  */
 JNIEXPORT jint JNICALL Java_com_example_moderato_cvcv_OpencvNativeClass_detectObject
-  (JNIEnv *, jclass, jlong, jstring);
+  (JNIEnv *, jclass, jlong, jlong, jstring);
 
 #ifdef __cplusplus
 }

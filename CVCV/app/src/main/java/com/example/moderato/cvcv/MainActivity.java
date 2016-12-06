@@ -14,10 +14,17 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -28,13 +35,20 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private VerticalSeekBar seekBar;
     private int highThreshold = 0;
     private String XMLDIR;
-    private Camera.Parameters params;
+    private CascadeClassifier mClassifier;
+    private MatOfRect mRects;
+    private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
+    private int count = 0;
 
     BaseLoaderCallback mLoaderCallBack = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
                 case BaseLoaderCallback.SUCCESS:
+                    Camera camera = Camera.open();
+                    Camera.Parameters params = camera.getParameters();
+                    params.setPreviewFrameRate(15); // Set preview frame rate to 15;
+                    camera.release();
                     javaCameraView.enableView();
                     break;
                 default:
@@ -49,7 +63,12 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         XMLDIR = CvHelper.copyClassifier(getApplicationContext());
-//        params = Camera.open().getParameters();
+        mClassifier = new CascadeClassifier(XMLDIR);
+        if (mClassifier.empty()) {
+            Log.e(TAG, "Loading classifier fail!!!");
+        } else {
+            Log.e(TAG, "Loading classifier succeed!!!");
+        }
 
         javaCameraView = (JavaCameraView) findViewById(R.id.java_camera_view);
         javaCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -65,12 +84,10 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
         });
     }
@@ -112,33 +129,48 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mGray = new Mat(height, width, CvType.CV_8UC1);
+        mRects = new MatOfRect();
     }
 
     @Override
     public void onCameraViewStopped() {
         mRgba.release();
         mGray.release();
+        mRects.release();
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        long startTime = System.currentTimeMillis();
         mRgba = inputFrame.rgba();
-        final long grayAddr = mGray.getNativeObjAddr();
-//        Log.d(TAG, "Preview frame rate is " + params.getPreviewFrameRate());
-//        Log.d(TAG, "Supported frame rate is " + params.getSupportedPreviewFrameRates());
 
-        Observable.just(mRgba)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Mat>() {
-                               @Override
-                               public void call(Mat mat) {
-                                   OpencvNativeClass.cannyThreshold(mat.getNativeObjAddr(), grayAddr, 0, highThreshold);
-                               }
-                           });
-        return mGray;
-//        OpencvNativeClass.detectObject(mRgba.getNativeObjAddr(), XMLDIR);
-//        return mRgba;
+        final Long addrObj = Long.valueOf(mRgba.getNativeObjAddr());
+
+        Observable.just(addrObj)
+            .flatMap(new Func1<Long, Observable<?>>() {
+                @Override
+                public Observable<Boolean> call(Long addr) {
+                    long startTime = System.currentTimeMillis();
+                    OpencvNativeClass.detectObject(addr, mRects.getNativeObjAddr(), XMLDIR);
+                    if(!mRects.empty()) {
+                        Log.d(TAG, "YES!!!!");
+                    } else {
+                        Log.d(TAG, "SHIT!!!!");
+                    }
+                    Log.d(TAG, "Running time of the algorithm on this frame is " + (System.currentTimeMillis() - startTime));
+                    return Observable.just(true);
+                }
+            })
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe();
+
+        if(!mRects.empty()) {
+            Rect[] carsArray = mRects.toArray();
+            for (Rect car : carsArray) {
+                Imgproc.rectangle(mRgba, car.tl(), car.br(), FACE_RECT_COLOR, 3);
+            }
+        }
+
+        return mRgba;
     }
 }

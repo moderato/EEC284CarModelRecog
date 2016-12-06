@@ -18,13 +18,13 @@ public class CvHelper {
 
     public static String copyClassifier(Context context) {
         String mDirPath = mStorageDir;
-        String mPath = mDirPath +  File.separator + "support" + File.separator + "data.xml";
+        String mPath = mDirPath +  File.separator + "support" + File.separator + "car_detection.xml";
 
         // only copy if file is not already present
         if (!(new File(mPath).exists())) {
             try {
                 AssetManager assetManager = context.getAssets();
-                InputStream in = assetManager.open("support/data.xml");
+                InputStream in = assetManager.open("support/car_detection.xml");
 
                 File dir = new File(mDirPath);
                 if (!dir.exists()) {
@@ -38,7 +38,7 @@ public class CvHelper {
                     Log.d(TAG, "Make new directory support");
                 }
 
-                File dataFile = new File(dataDir, "data.xml");
+                File dataFile = new File(dataDir, "car_detection.xml");
                 DataOutputStream out = new DataOutputStream(new FileOutputStream(
                         dataFile.getAbsolutePath()));
 
