@@ -18,6 +18,7 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
@@ -25,6 +26,8 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+
+import static android.R.attr.y;
 
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -144,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         final Long addrObj = Long.valueOf(mRgba.getNativeObjAddr());
 
-        if(count % 5 == 0) {
+        if(count % 4 == 0) {
             Observable.just(addrObj)
                 .flatMap(new Func1<Long, Observable<?>>() {
                     @Override
@@ -162,10 +165,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         if(!mRects.empty()) {
             Rect[] carsArray = mRects.toArray();
             for (Rect car : carsArray) {
-                Point pt = car.tl();
-                if(pt.y >= 72 && pt.y <= 216){
-                    Imgproc.rectangle(mRgba, car.tl(), car.br(), CAR_RECT_COLOR, 3);
-                }
+                Point pt1 = car.tl();
+                pt1.y += 72; // Shift the rectangle for a distance of quarter of frame height
+                Point pt2 = car.br();
+                pt2.y += 72;
+                Imgproc.rectangle(mRgba, pt1, pt2, CAR_RECT_COLOR, 3);
             }
         }
         count++;
